@@ -5,9 +5,10 @@ from threading import Thread
 from multiprocessing import Process, Queue, Value
 import time
 
-from webapp.routes3 import app
+from webapp.routes import app
 from gevent import pywsgi
 
+from flask_cors import CORS
 
 PORT = 5000
 
@@ -27,6 +28,11 @@ class FlaskThread(object):
 
 def qtApp(app):
     # Initialize the app
+    # app.config.from_object(AppConfiguration)
+    cors = CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
+    # api = Api(app)
+
     webapp = FlaskThread(app)
     webapp.start()
 
