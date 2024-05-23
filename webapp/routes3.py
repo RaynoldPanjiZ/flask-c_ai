@@ -45,7 +45,10 @@ def get_smartphone_info(action):
 
 
         data_res = {'status':'success','data': datas}
-        return jsonify(data_res)
+        res = jsonify(data_res)
+        res.headers.add("Access-Control-Allow-Origin", "*") 
+        return res
+
     elif request.method == 'POST':      # http://localhost:5000/smartphone_info/edit
         try:
             content = request.json
@@ -65,11 +68,17 @@ def get_smartphone_info(action):
             
             data_res = {'status':'success','message': 'Data updated!'}
             # print(datas)
-            return jsonify(data_res)
+            res = jsonify(data_res)
+            res.headers.add("Access-Control-Allow-Origin", "*") 
+            return res
+
         except Exception as e:
             data_res = {'status':'Failed','message': f'Error update: {e}'}
             print('fail')
-            return jsonify(data_res)
+            res = jsonify(data_res)
+            res.headers.add("Access-Control-Allow-Origin", "*") 
+            return res
+
 
 @app.route('/system_log/<action>', methods=['GET', 'POST'])
 def get_system_log(action):
@@ -79,7 +88,10 @@ def get_system_log(action):
         datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
 
         data_res = {'status':'success','data': datas}
-        return jsonify(data_res)
+        res = jsonify(data_res)
+        res.headers.add("Access-Control-Allow-Origin", "*") 
+        return res
+
     
     elif request.method == 'POST':
         if action == "delete":             # http://localhost:5000/system_log/deelete
@@ -94,11 +106,17 @@ def get_system_log(action):
                 
                 data_res = {'status':'success','message': 'Data Deleted!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error delete: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
 
 @app.route('/construction_scope/<action>', methods=['GET', 'POST'])
 def get_construction_scope(action):
@@ -108,14 +126,17 @@ def get_construction_scope(action):
         datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
 
         data_res = {'status':'success','data': datas}
-        return jsonify(data_res)
+        res = jsonify(data_res)
+        res.headers.add("Access-Control-Allow-Origin", "*") 
+        return res
+
     elif request.method == 'POST':
         if action == "add":             # http://localhost:5000/construction_scope/deelete
             try:
                 # autoincrement data index
                 cursor.execute("SELECT _id FROM construction_site ORDER BY _id DESC LIMIT 1;")
-                for res in cursor.fetchall():
-                    last_id = res[0] + 1
+                for dat in cursor.fetchall():
+                    last_id = dat[0] + 1
 
                 #set data
                 content = request.json
@@ -137,11 +158,17 @@ def get_construction_scope(action):
                 
                 data_res = {'status':'success','message': 'Data updated!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error update: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             
         elif action == "edit":          # http://localhost:5000/construction_scope/edit
             try:
@@ -163,11 +190,17 @@ def get_construction_scope(action):
                 
                 data_res = {'status':'success','message': 'Data updated!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error update: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
         
         elif action == "delete":             # http://localhost:5000/construction_scope/deelete
             try:
@@ -181,11 +214,17 @@ def get_construction_scope(action):
                 
                 data_res = {'status':'success','message': 'Data Deleted!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error delete: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
 
 
 @app.route('/notif_setting/<action>', methods=['GET', 'POST'])
@@ -196,14 +235,17 @@ def get_notif_setting(action):
         datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
 
         data_res = {'status':'success','data': datas}
-        return jsonify(data_res)
+        res = jsonify(data_res)
+        res.headers.add("Access-Control-Allow-Origin", "*") 
+        return res
+
     elif request.method == 'POST':
         if action == "add":                 # http://localhost:5000/notif_setting/add
             try:
                 # autoincrement data index
                 cursor.execute("SELECT _id FROM notif_setting ORDER BY _id DESC LIMIT 1;")
-                for res in cursor.fetchall():
-                    last_id = res[0] + 1
+                for dat in cursor.fetchall():
+                    last_id = dat[0] + 1
 
                 #set data
                 content = request.json
@@ -225,11 +267,17 @@ def get_notif_setting(action):
                 
                 data_res = {'status':'success','message': 'Data updated!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error update: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             
         elif action == "edit":              # http://localhost:5000/notif_setting/edit
             try:
@@ -250,11 +298,17 @@ def get_notif_setting(action):
                 
                 data_res = {'status':'success','message': 'Data updated!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error update: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             
         elif action == "delete":             # http://localhost:5000/construct_ai/deelete
             try:
@@ -268,8 +322,13 @@ def get_notif_setting(action):
                 
                 data_res = {'status':'success','message': 'Data Deleted!'}
                 # print(datas)
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
             except Exception as e:
                 data_res = {'status':'Failed','message': f'Error delete: {e}'}
                 print('fail')
-                return jsonify(data_res)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
