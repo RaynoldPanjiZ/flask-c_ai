@@ -10,7 +10,7 @@ try:
     # connection parameters
     conn_params = {
         'user' : "root",
-        'password' : "test123",
+        'password' : "test123",     ## ganti password dengan sesuai konfigurasi di MariaDB
         'host' : "127.0.0.1",
         'port' : 3306,
         'database' : "construct_ai"
@@ -37,6 +37,19 @@ def index():
 #     return jsonify(data_res)
 
 
+### autoincrement data index
+def autoincrement_id(table, by_column):  
+    cursor.execute(f"SELECT {by_column} FROM {table} ORDER BY {by_column} DESC")
+    existing_ids = [row[0] for row in cursor.fetchall()]
+    if not existing_ids:            # if data empty / first id
+        return 0
+    for i in range(0, max(existing_ids) + 2):      # find missing id  ex: [0, 1, 2, _, 4]
+        if i not in existing_ids:
+            return i
+    return int(existing_ids[-1] + 1)        # set new id from last_id + 1
+
+
+
 @app.route('/smartphone_info/<action>', methods=['GET', 'POST'])
 def get_smartphone_info(action):
     if request.method == 'GET':     # http://localhost:5000/smartphone_info/get
@@ -54,13 +67,11 @@ def get_smartphone_info(action):
         if action == "add":             # http://localhost:5000/smartphone_info/add
             try:
                 # autoincrement data index
-                cursor.execute("SELECT _id FROM app_status ORDER BY _id DESC LIMIT 1;")
-                for dat in cursor.fetchall():
-                    last_id = dat[0] + 1
+                new_id = autoincrement_id('app_status', '_id')
 
                 #set data
                 content = request.json
-                id = last_id
+                id = new_id
                 username = content['username']
                 phone = content['phone']
                 site = content['site']
@@ -119,9 +130,50 @@ def get_smartphone_info(action):
                 return res
 
 
+
+@app.route('/version_update/<action>', methods=['GET', 'POST'])
+def get_version_update(action):
+    if request.method == 'GET' and action == "get":     # http://localhost:5000/version_update/get
+        cursor.execute("SELECT * FROM version_record")
+        columns = cursor.description 
+        datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
+
+        data_res = {'status':'success','data': datas}
+        res = jsonify(data_res)
+        res.headers.add("Access-Control-Allow-Origin", "*") 
+        return res
+
+    elif request.method == 'POST' and action == "edit":      # http://localhost:5000/version_update/edit
+        try:
+            content = request.json
+            id = content['_id']
+            mobile = content['mobile']
+            server = content['server']
+
+            cursor.execute(
+                f"UPDATE `construct_ai`.`version_record` SET \
+                    `mobile`='{mobile}', `server`='{server}' \
+                        WHERE `version_id`={id};")
+            connection.commit()
+            
+            data_res = {'status':'success','message': 'Data updated!'}
+            # print(datas)
+            res = jsonify(data_res)
+            res.headers.add("Access-Control-Allow-Origin", "*") 
+            return res
+
+        except Exception as e:
+            data_res = {'status':'Failed','message': f'Error update: {e}'}
+            print('operations error:', e)
+            res = jsonify(data_res)
+            res.headers.add("Access-Control-Allow-Origin", "*") 
+            return res
+
+
+
 @app.route('/system_log/<action>', methods=['GET', 'POST'])
 def get_system_log(action):
-    if request.method == 'GET':         # http://localhost:5000/system_log/get
+    if request.method == 'GET' and action == "get":         # http://localhost:5000/system_log/get
         cursor.execute("SELECT * FROM system_log")
         columns = cursor.description 
         datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
@@ -131,9 +183,42 @@ def get_system_log(action):
         res.headers.add("Access-Control-Allow-Origin", "*") 
         return res
 
-    
     elif request.method == 'POST':
-        if action == "delete":             # http://localhost:5000/system_log/delete
+        if action == "add":       # http://localhost:5000/system_log/add
+            try:
+                # autoincrement data index
+                new_id = autoincrement_id('system_log', '_id')
+
+                #set data
+                content = request.json
+                id = new_id
+                username = content['username']
+                phone = content['phone']
+                site = content['site']
+                date = content['date']
+                time = content['time']
+                event_type = content['event_type']
+                
+                insert_query = f"INSERT INTO system_log \
+                    (_id, username, phone, site, date, time,event_type) \
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                data = (id, username, phone, site, date, time, event_type)
+                cursor.execute(insert_query, data)
+                connection.commit()
+                
+                data_res = {'status':'success','message': 'Data updated!'}
+                # print(datas)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+            except Exception as e:
+                print('operations error:', e)
+                data_res = {'status':'Failed','message': f'Error update: {e}'}
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res           
+        
+        elif action == "delete":             # http://localhost:5000/system_log/delete
             try:
                 #set data
                 content = request.json
@@ -172,14 +257,11 @@ def get_construction_scope(action):
     elif request.method == 'POST':
         if action == "add":             # http://localhost:5000/construction_scope/add
             try:
-                # autoincrement data index
-                cursor.execute("SELECT _id FROM construction_site ORDER BY _id DESC LIMIT 1;")
-                for dat in cursor.fetchall():
-                    last_id = dat[0] + 1
+                new_id = autoincrement_id('construction_site', '_id')
 
                 #set data
                 content = request.json
-                id = last_id
+                id = new_id
                 site = content['site']
                 manager_name = content['manager_name']
                 phone = content['phone']
@@ -238,7 +320,6 @@ def get_construction_scope(action):
                 res = jsonify(data_res)
                 res.headers.add("Access-Control-Allow-Origin", "*") 
                 return res
-
         
         elif action == "delete":             # http://localhost:5000/construction_scope/delete
             try:
@@ -246,7 +327,7 @@ def get_construction_scope(action):
                 content = request.json
                 id = content['_id']
                 
-                query = "DELETE FROM construction_scope WHERE _id = %s"
+                query = "DELETE FROM construction_site WHERE _id = %s"
                 cursor.execute(query, (id,))
                 connection.commit()
                 
@@ -281,18 +362,25 @@ def get_notif_setting(action):
     elif request.method == 'POST':
         if action == "add":                 # http://localhost:5000/notif_setting/add
             try:
-                # autoincrement data index
-                cursor.execute("SELECT _id FROM notif_setting ORDER BY _id DESC LIMIT 1;")
-                for dat in cursor.fetchall():
-                    last_id = dat[0] + 1
+                # # autoincrement data index
+                # cursor.execute("SELECT _id FROM notif_setting ORDER BY _id DESC LIMIT 1;")
+                # for dat in cursor.fetchall():
+                #     new_id = dat[0] + 1
+
+                new_id = autoincrement_id('notif_setting', '_id')
 
                 #set data
                 content = request.json
-                id = last_id
+                id = new_id
                 site = content['site']
                 title = content['title']
                 danger_cat = content['danger_cat']
                 message = content['message']
+
+                # Replace quote marks with \" \'
+                message = message.replace("'", "\\'")
+                message = message.replace('"', '\\"')
+
                 type = content['type']
                 date = content['date']
                 time = content['time']
@@ -325,7 +413,12 @@ def get_notif_setting(action):
                 site = (content['site'])
                 title = (content['title'])
                 danger_cat = (content['danger_cat'])
+
                 message = content['message']
+                # Replace quote marks with \" \'
+                message = message.replace("'", "\\'")
+                message = message.replace('"', '\\"')
+                
                 type = (content['type'])
                 date = (content['date'])
                 time = (content['time'])
@@ -386,18 +479,15 @@ def identity_information(action):
             res.headers.add("Access-Control-Allow-Origin", "*") 
             return res
         elif request.method == 'POST' and action == 'add':  # http://localhost:5000/identity/add
+            token = ''
             try:
-                # autoincrement data index
-                cursor.execute("SELECT _id FROM identity ORDER BY _id DESC LIMIT 1;")
-                for dat in cursor.fetchall():
-                    last_id = dat[0] + 1
+                new_id = autoincrement_id('identity', '_id')
 
                 incoming_data = request.json
                 token = incoming_data.get('token')
-                new_id = last_id
 
                 insert_query = f"INSERT INTO identity (_id, token) VALUES (%s, %s)"
-                data = (id, token)
+                data = (new_id, token)
                 cursor.execute(insert_query, data)
                 connection.commit()
                 
@@ -406,7 +496,7 @@ def identity_information(action):
                 res.headers.add("Access-Control-Allow-Origin", "*") 
                 return res
             except Exception as e:
-                print('fail')
+                print('fail =>',token)
                 data_res = {'status': 'Failed', 'message': f'Error update: {e}'}
                 res = jsonify(data_res)
                 res.headers.add("Access-Control-Allow-Origin", "*") 
