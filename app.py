@@ -9,6 +9,7 @@ from webapp.routes3 import app
 from gevent import pywsgi
 
 from flask_cors import CORS
+import logging
 
 PORT = 5000
 
@@ -17,6 +18,8 @@ PORT = 5000
 class FlaskThread(object):
     def __init__(self, application):
         self.application = application
+        # logging.basicConfig(level=logging.INFO)
+        # self.application.debug = True
 
     def start(self):
         http_server = pywsgi.WSGIServer(('0.0.0.0', PORT), self.application)
@@ -35,6 +38,7 @@ def qtApp(app):
 
     webapp = FlaskThread(app)
     webapp.start()
+
 
 
 if __name__ == '__main__':
