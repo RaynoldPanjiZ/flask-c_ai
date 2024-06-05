@@ -8,9 +8,17 @@ lock = threading.Lock()
 
 try:
     # connection parameters
+    # conn_params = {
+    #     'user' : "root",
+    #     'password' : "aery2021!",     ## ganti password dengan sesuai konfigurasi di MariaDB
+    #     'host' : "127.0.0.1",
+    #     'port' : 3306,
+    #     'database' : "construct_ai"
+    # }
+    # connection parameters
     conn_params = {
         'user' : "root",
-        'password' : "test123",     ## ganti password dengan sesuai konfigurasi di MariaDB
+        'password' : "huoguerz123",     ## ganti password dengan sesuai konfigurasi di MariaDB
         'host' : "127.0.0.1",
         'port' : 3306,
         'database' : "construct_ai"
@@ -57,7 +65,6 @@ def get_smartphone_info(action):
         columns = cursor.description 
         datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
 
-
         data_res = {'status':'success','data': datas}
         res = jsonify(data_res)
         res.headers.add("Access-Control-Allow-Origin", "*") 
@@ -66,6 +73,7 @@ def get_smartphone_info(action):
     elif request.method == 'POST':
         if action == "add":             # http://localhost:5000/smartphone_info/add
             try:
+                message = ''
                 # autoincrement data index
                 new_id = autoincrement_id('app_status', '_id')
 
@@ -79,14 +87,34 @@ def get_smartphone_info(action):
                 operation = content['operation']
                 version = content['version']
                 
-                insert_query = f"INSERT INTO app_status \
-                    (_id, username, phone, site, status, operation, version) \
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                data = (id, username, phone, site, status, operation, version)
-                cursor.execute(insert_query, data)
+                # Check if the entry already exists in the database
+                check_query = "SELECT _id FROM app_status WHERE username = %s AND phone = %s"
+                cursor.execute(check_query, (username, phone))
+                existing_entry = cursor.fetchone()
+                if existing_entry:
+                    # Update the existing entry
+                    update_query = "UPDATE app_status SET site = %s, status = %s, operation = %s, version = %s WHERE _id = %s"
+                    data = (site, status, operation, version, existing_entry[0])
+                    cursor.execute(update_query, data)
+                    message = 'Data updated!'
+                    
+                else:
+                    # Insert a new entry
+                    insert_query = "INSERT INTO app_status \
+                        (_id, username, phone, site, status, operation, version) \
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    data = (id, username, phone, site, status, operation, version)
+                    cursor.execute(insert_query, data)
+                    message = 'Data added!'
+                
+                # insert_query = f"INSERT INTO app_status \
+                #     (_id, username, phone, site, status, operation, version) \
+                #         VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                # data = (id, username, phone, site, status, operation, version)
+                # cursor.execute(insert_query, data)
                 connection.commit()
                 
-                data_res = {'status':'success','message': 'Data updated!'}
+                data_res = {'status':'success','message': message}
                 # print(datas)
                 res = jsonify(data_res)
                 res.headers.add("Access-Control-Allow-Origin", "*") 
@@ -129,7 +157,30 @@ def get_smartphone_info(action):
                 res.headers.add("Access-Control-Allow-Origin", "*") 
                 return res
 
+        elif action == "update":  # http://localhost:5000/smartphone_info/update
+            try:
+                content = request.json
+                username = content['username']
+                phone = content['phone']
+                new_status = content['status']
 
+                cursor.execute(
+                    f"UPDATE `construct_ai`.`app_status` SET \
+                        `status`='{new_status}' \
+                            WHERE `username`='{username}' AND `phone`='{phone}';")
+                connection.commit()
+                
+                data_res = {'status':'success','message': 'Status updated!'}
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
+            except Exception as e:
+                data_res = {'status':'Failed','message': f'Error updating status: {e}'}
+                print('operations error:', e)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*")
+                return res
 
 @app.route('/version_update/<action>', methods=['GET', 'POST'])
 def get_version_update(action):
@@ -186,6 +237,7 @@ def get_system_log(action):
     elif request.method == 'POST':
         if action == "add":       # http://localhost:5000/system_log/add
             try:
+                message = ''
                 # autoincrement data index
                 new_id = autoincrement_id('system_log', '_id')
 
@@ -199,14 +251,28 @@ def get_system_log(action):
                 time = content['time']
                 event_type = content['event_type']
                 
-                insert_query = f"INSERT INTO system_log \
-                    (_id, username, phone, site, date, time,event_type) \
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                data = (id, username, phone, site, date, time, event_type)
-                cursor.execute(insert_query, data)
+                # Check if the entry already exists in the database
+                check_query = "SELECT _id FROM system_log WHERE username = %s AND phone = %s"
+                cursor.execute(check_query, (username, phone))
+                existing_entry = cursor.fetchone()
+                if existing_entry:
+                    # Update the existing entry
+                    update_query = "UPDATE system_log SET site = %s, date = %s, time = %s, event_type = %s WHERE _id = %s"
+                    data = (site, date, time, event_type, existing_entry[0])
+                    cursor.execute(update_query, data)
+                    message = 'Data updated!'
+                else:
+                    
+                    insert_query = f"INSERT INTO system_log \
+                        (_id, username, phone, site, date, time,event_type) \
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    data = (id, username, phone, site, date, time, event_type)
+                    cursor.execute(insert_query, data)
+                    message = 'Data added'
+                    
                 connection.commit()
                 
-                data_res = {'status':'success','message': 'Data updated!'}
+                data_res = {'status':'success','message': message}
                 # print(datas)
                 res = jsonify(data_res)
                 res.headers.add("Access-Control-Allow-Origin", "*") 
