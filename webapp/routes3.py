@@ -18,7 +18,7 @@ try:
     # connection parameters
     conn_params = {
         'user' : "root",
-        'password' : "huoguerz123",     ## ganti password dengan sesuai konfigurasi di MariaDB
+        'password' : "test123",     ## ganti password dengan sesuai konfigurasi di MariaDB
         'host' : "127.0.0.1",
         'port' : 3306,
         'database' : "construct_ai"
