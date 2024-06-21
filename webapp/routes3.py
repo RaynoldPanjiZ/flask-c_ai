@@ -7,18 +7,9 @@ app = Flask(__name__)
 lock = threading.Lock()
 
 try:
-    # connection parameters
-    # conn_params = {
-    #     'user' : "root",
-    #     'password' : "aery2021!",     ## ganti password dengan sesuai konfigurasi di MariaDB
-    #     'host' : "127.0.0.1",
-    #     'port' : 3306,
-    #     'database' : "construct_ai"
-    # }
-    # connection parameters
     conn_params = {
         'user' : "root",
-        'password' : "huoguerz123",     ## ganti password dengan sesuai konfigurasi di MariaDB
+        'password' : "test123",     ## ganti password dengan sesuai konfigurasi di MariaDB
         'host' : "127.0.0.1",
         'port' : 3306,
         'database' : "construct_ai"
@@ -529,6 +520,104 @@ def get_notif_setting(action):
                 res = jsonify(data_res)
                 res.headers.add("Access-Control-Allow-Origin", "*") 
                 return res
+
+
+@app.route('/detect_notif/<action>', methods=['GET', 'POST'])
+def detection_notif(action):
+    if request.method == 'GET':             # http://localhost:5000/detect_notif/get
+        cursor.execute("SELECT * FROM detect_notif")
+        columns = cursor.description 
+        datas = [{columns[index][0]:column for index, column in enumerate(value)} for value in cursor.fetchall()]
+
+        data_res = {'status':'success','data': datas}
+        res = jsonify(data_res)
+        res.headers.add("Access-Control-Allow-Origin", "*") 
+        return res
+
+    elif request.method == 'POST':
+        if action == "add":                 # http://localhost:5000/detect_notif/add
+            try:
+                new_id = autoincrement_id('detect_notif', '_id')
+
+                #set data
+                content = request.json
+                id = new_id
+                detection = content['detection']
+                site = content['site']
+                date = content['date']
+                time = content['time']
+                
+                
+                insert_query = f"INSERT INTO detect_notif \
+                    (_id, detection, site, date, time) \
+                        VALUES (%s, %s, %s, %s, %s)"
+                data = (id, detection, site, date, time)
+                cursor.execute(insert_query, data)
+                connection.commit()
+                
+                data_res = {'status':'success','message': 'Data updated!'}
+                # print(datas)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
+            except Exception as e:
+                data_res = {'status':'Failed','message': f'Error update: {e}'}
+                print(f'operations error: {e}')
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+            
+        elif action == "edit":              # http://localhost:5000/detect_notif/edit
+            try:
+                content = request.json
+                id = content['_id']
+                detection = (content['detection'])
+                site = (content['site'])
+                date = (content['date'])
+                time = (content['time'])
+                
+                cursor.execute(
+                    f"UPDATE `construct_ai`.`detect_notif` SET \
+                        `site`='{site}', `detection`='{detection}', `date`='{date}', `time`='{time}' \
+                            WHERE `_id`={id};")
+                connection.commit()
+                
+                data_res = {'status':'success','message': 'Data updated!'}
+                # print(datas)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
+            except Exception as e:
+                data_res = {'status':'Failed','message': f'Error update: {e}'}
+                print(f'operations error: {e}')
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+            
+        elif action == "delete":             # http://localhost:5000/detect_notif/delete
+            try:
+                #set data
+                content = request.json
+                id = content['_id']
+                
+                query = "DELETE FROM detect_notif WHERE _id = %s"
+                cursor.execute(query, (id,))
+                connection.commit()
+                
+                data_res = {'status':'success','message': 'Data Deleted!'}
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
+            except Exception as e:
+                data_res = {'status':'Failed','message': f'Error delete: {e}'}
+                print('operations error:', e)
+                res = jsonify(data_res)
+                res.headers.add("Access-Control-Allow-Origin", "*") 
+                return res
+
 
 
 
